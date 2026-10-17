@@ -374,3 +374,47 @@ ${landLine}總建｜${totalPing}
 格局｜${layout}
 ${parkingLine}樓層｜${floor}
 屋齡｜${age}
+━━━━━━━━━━━━━━
+${featureList}
+────────────────
+歡迎預約賞屋
+
+👤 張英泓｜永慶不動產東橋銘星店
+📞 0962-062-425
+💬 LINE ID：0962062425
+
+以上資料如有記載錯誤，依實際登記權狀為準
+‧ 永慶不動產東橋銘星店
+‧ 銘星格鼎不動產仲介經紀有限公司
+‧ 經紀人陳建民(106南市字第00449號)`;
+
+  currentFullText = fullText;
+  document.getElementById("outputPreview").innerText = fullText;
+}
+
+function copyResult() {
+  if (!currentFullText || currentFullText.includes("開價｜--")) return;
+  navigator.clipboard.writeText(currentFullText).then(() => {
+    showToast("📋 已複製到剪貼簿！可直接貼至 LINE / FB");
+  });
+}
+
+function shareToLine() {
+  if (!currentFullText || currentFullText.includes("開價｜--")) {
+    showToast("⚠️ 請先貼上物件資料");
+    return;
+  }
+  const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(currentFullText)}`;
+  window.open(lineUrl, '_blank');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById("toast");
+  toast.innerText = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2500);
+}
+</script>
+
+</body>
+</html>
