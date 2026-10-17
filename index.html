@@ -31,11 +31,7 @@
       background-image: 
         radial-gradient(at 0% 0%, rgba(245, 158, 11, 0.12) 0px, transparent 50%),
         radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.12) 0px, transparent 50%);
-      color: var(--text-main);
-      min-height: 100vh;
-      padding: 30px 16px;
-      display: flex;
-      justify-content: center;
+      color: var(--text-main); min-height: 100vh; padding: 30px 16px; display: flex; justify-content: center;
     }
 
     .container { width: 100%; max-width: 1080px; display: flex; flex-direction: column; gap: 20px; }
@@ -63,7 +59,6 @@
       padding: 22px; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     }
 
-    /* 頂部操作欄 */
     .paste-zone {
       position: relative;
       background: rgba(15, 23, 42, 0.7);
@@ -158,10 +153,10 @@
       <div class="brand-icon">英</div>
       <div class="brand-text">
         <h1>英泓廣告小幫手</h1>
-        <p>瞬發精準解析 ‧ 永不掉線防護版</p>
+        <p>大樓 / 透天雙支援 ‧ 精準文案生成器</p>
       </div>
     </div>
-    <div class="badge-status">高精準解析核心已就緒</div>
+    <div class="badge-status">透天土地坪數支援已就緒</div>
   </header>
 
   <!-- 智慧貼上區 -->
@@ -174,7 +169,7 @@
         </span>
         <a href="https://buy.yungching.com.tw/list/%E5%8F%B0%E5%8D%97%E5%B8%82-_c" target="_blank" class="btn-portal">↗ 開啟永慶網站</a>
       </div>
-      <textarea class="smart-paste" id="smartInput" placeholder="請直接在此按 Ctrl+V 貼上，系統將在 0.1 秒內自動完成抓取、填入欄位並複製排版文案..." oninput="autoParseInput(this.value)"></textarea>
+      <textarea class="smart-paste" id="smartInput" placeholder="請直接在此按 Ctrl+V 貼上，系統自動辨別透天/大樓，精準提取地坪、建坪與特色..." oninput="autoParseInput(this.value)"></textarea>
     </div>
   </section>
 
@@ -189,14 +184,18 @@
       <div class="field-grid">
         <div class="field-group"><label>開價</label><input type="text" id="f_price" placeholder="例：1,536萬" oninput="renderOutput()"></div>
         <div class="field-group"><label>地址 / 社區</label><input type="text" id="f_address" placeholder="例：台南市永康區永勝街" oninput="renderOutput()"></div>
+        
+        <!-- 新增土地坪數欄位 -->
+        <div class="field-group"><label>地坪（土地坪數）</label><input type="text" id="f_landPing" placeholder="例：28.5坪（透天必填）" oninput="renderOutput()"></div>
         <div class="field-group"><label>總建坪數</label><input type="text" id="f_totalPing" placeholder="例：48.98坪" oninput="renderOutput()"></div>
+        
         <div class="field-group"><label>主建物</label><input type="text" id="f_mainPing" placeholder="例：22.71坪" oninput="renderOutput()"></div>
         <div class="field-group"><label>附屬建物</label><input type="text" id="f_subPing" placeholder="例：2.98坪" oninput="renderOutput()"></div>
         <div class="field-group"><label>共同使用</label><input type="text" id="f_sharedPing" placeholder="例：23.29坪" oninput="renderOutput()"></div>
         <div class="field-group"><label>建物格局</label><input type="text" id="f_layout" placeholder="例：3房2廳2衛" oninput="renderOutput()"></div>
-        <div class="field-group"><label>車位形式</label><input type="text" id="f_parking" placeholder="例：坡道平面" oninput="renderOutput()"></div>
-        <div class="field-group"><label>樓層</label><input type="text" id="f_floor" placeholder="例：8樓／14樓" oninput="renderOutput()"></div>
-        <div class="field-group"><label>屋齡</label><input type="text" id="f_age" placeholder="例：約 1 年" oninput="renderOutput()"></div>
+        <div class="field-group"><label>車位形式</label><input type="text" id="f_parking" placeholder="例：車庫 / 坡道平面" oninput="renderOutput()"></div>
+        <div class="field-group"><label>樓層</label><input type="text" id="f_floor" placeholder="例：整棟1-4樓 / 8樓" oninput="renderOutput()"></div>
+        <div class="field-group field-full"><label>屋齡</label><input type="text" id="f_age" placeholder="例：約 1.0 年" oninput="renderOutput()"></div>
         <div class="field-group field-full">
           <label>物件特色說明（每行一項，自動補上「‧」）</label>
           <textarea class="feature-editor" id="f_features" placeholder="抓取後將自動條列於此，亦可隨時手動編輯增刪..." oninput="renderOutput()"></textarea>
@@ -220,69 +219,98 @@
 <script>
 let currentFullText = "";
 
-// 核心解析引擎：自動萃取開價、規格與特色
+// 核心精確解析引擎
 function autoParseInput(rawText) {
   if (!rawText || rawText.trim().length < 20) return;
 
-  const findPattern = (reg, defaultVal = "--") => {
+  const findPattern = (reg, defaultVal = "") => {
     const match = rawText.match(reg);
     return match ? match[1].trim() : defaultVal;
   };
 
   // 1. 開價
   let price = "--";
-  const pMatch = rawText.match(/([0-9,]+)\s*萬/);
-  if (pMatch && !pMatch[0].includes("實價")) {
+  const pMatch = rawText.match(/(?:降\s*\d+\s*萬)?\s*([0-9,]+)\s*萬\s*(?:單價請洽業務|單價)/);
+  if (pMatch) {
     price = `${pMatch[1]}萬`;
+  } else {
+    const pFallback = rawText.match(/([0-9,]{3,})\s*萬/);
+    if (pFallback) price = `${pFallback[1]}萬`;
   }
 
-  // 2. 地址與社區
-  let address = findPattern(/(台南市[^\s\n\r]+(?:路|街|巷|段|區)[^\s\n\r]*)/, "台南市永康區");
-  const commMatch = rawText.match(/社區[\s\S]*?([^\s\n\r]+)/) || rawText.match(/([^\s\n\r]+)\s*\|?\s*台南市/);
+  // 2. 社區名稱
   let community = "";
-  if (commMatch && !commMatch[1].includes("買屋") && !commMatch[1].includes("永慶")) {
+  const commMatch = rawText.match(/社區\s*([^\s\n\r]+)\s*(?:看更多社區資訊|追蹤社區)/);
+  if (commMatch && !commMatch[1].includes("實價") && !commMatch[1].includes("買屋")) {
     community = commMatch[1];
+  } else {
+    const topComm = rawText.match(/台南市[^\s\n\r]+\s+([^\s\n\r]+)\s*(?:1,|[0-9]+萬)/);
+    if (topComm && !topComm[1].includes("降") && !topComm[1].includes("萬")) {
+      community = topComm[1];
+    }
   }
+
+  // 地址
+  let address = findPattern(/(台南市[^\s\n\r]+(?:路|街|巷|段|區)[^\s\n\r]*)/, "台南市永康區");
   const fullAddress = (community && !address.includes(community)) ? `${address}（${community}）` : address;
 
-  // 3. 坪數
+  // 3. 土地坪數（地坪）精準抓取
+  let landPing = findPattern(/土地坪數\s*([\d\.]+\s*坪)/) || findPattern(/土地\s*([\d\.]+\s*坪)/);
+
+  // 4. 建物坪數
   const totalPing = findPattern(/建物坪數[\s\S]*?([\d\.]+\s*坪(\(含車位[\d\.]+坪\))?)/) || findPattern(/建物([\d\.]+坪)/);
-  const mainPing = findPattern(/主建物[\s\S]*?([\d\.]+\s*坪)/) || "--";
-  const subPing = findPattern(/附屬建物[\s\S]*?([\d\.]+\s*坪(\([^\)]+\))?)/) || "--";
-  const sharedPing = findPattern(/共同使用[\s\S]*?([\d\.]+\s*坪)/) || "--";
-  const layout = findPattern(/建物格局[\s\S]*?([0-9]+房[^\n\r]+)/) || findPattern(/([0-9]+房\(室\)[0-9]+廳[0-9]+衛)/);
-  const floor = findPattern(/樓層[\s\S]*?([0-9]+[\s\/]+[0-9]+樓)/) || findPattern(/([0-9]+\/[0-9]+樓)/);
+  const mainPing = findPattern(/主建物\s*([\d\.]+\s*坪)/);
+  const subPing = findPattern(/附屬建物小計\s*([\d\.]+\s*坪(\([^\)]+\))?)/) || findPattern(/附屬建物\s*([\d\.]+\s*坪)/);
+  const sharedPing = findPattern(/共同使用小計\s*([\d\.]+\s*坪)/) || findPattern(/共同使用\s*([\d\.]+\s*坪)/);
+  const layout = findPattern(/建物格局\s*([0-9]+房[^\n\r]+)/) || findPattern(/([0-9]+房\(室\)[0-9]+廳[0-9]+衛)/);
+
+  // 5. 樓層（排除照片 2/24 輪播干擾）
+  let floor = "--";
+  const floorMatch = rawText.match(/(?:屋齡[^\n]+\n|\b)([0-9]+\/[0-9]+樓)/) || rawText.match(/(整棟[0-9~]+樓)/);
+  if (floorMatch) {
+    floor = floorMatch[1];
+  } else {
+    const f2 = rawText.match(/樓層[\s\S]*?([0-9]+[\s\/]+[0-9]+樓)/);
+    if (f2) floor = f2[1];
+  }
+
+  // 屋齡
   const age = findPattern(/屋齡[\s\S]*?([\d\.]+\s*年)/) || findPattern(/屋齡\s*([\d\.]+\s*年)/);
 
-  // 4. 車位
+  // 6. 車位形式
   let parking = "坡道平面";
-  if (rawText.includes("平面車位") || rawText.includes("B1平面")) {
+  if (rawText.includes("自有車庫") || rawText.includes("門前停車") || rawText.includes("一樓車庫")) {
+    parking = "門前/車庫停車";
+  } else if (rawText.includes("B1平面") || rawText.includes("B1 平面")) {
+    parking = "B1平面車位";
+  } else if (rawText.includes("平面車位")) {
     const parkMatch = rawText.match(/([B0-9]+平面車位)/);
     parking = parkMatch ? parkMatch[1] : "坡道平面";
   } else if (rawText.includes("機械車位")) {
     parking = "機械車位";
   }
 
-  // 5. 特色說明
+  // 7. 特色說明
   let featureItems = [];
   const featMatch = rawText.match(/特色說明([\s\S]*?)基本資訊/);
   if (featMatch) {
     featureItems = featMatch[1].split("\n")
       .map(s => s.trim().replace(/^[‧•\-\*]\s*/, ""))
-      .filter(s => s.length > 5 && !s.includes("房貸") && !s.includes("各項面積"));
+      .filter(s => s.length > 4 && !s.includes("房貸") && !s.includes("各項面積") && !s.includes("YC"));
   }
 
   if (featureItems.length === 0) {
     featureItems = [
       "核心地段，街廓整齊、道路規劃完善，居住環境優質。",
-      "近綠意公園與市圖總館，兼具文教與休閒運動氛圍。",
-      "公設規劃完善，管理嚴謹，自住投資皆宜。"
+      "採光通風良好，格局方正動線佳。",
+      "生活機能完備，交通便利，自住換屋首選。"
     ];
   }
 
-  // 自動填入左側欄位
+  // 回填左側編輯欄位
   document.getElementById("f_price").value = price;
   document.getElementById("f_address").value = fullAddress;
+  document.getElementById("f_landPing").value = landPing;
   document.getElementById("f_totalPing").value = totalPing;
   document.getElementById("f_mainPing").value = mainPing;
   document.getElementById("f_subPing").value = subPing;
@@ -290,17 +318,18 @@ function autoParseInput(rawText) {
   document.getElementById("f_layout").value = layout;
   document.getElementById("f_parking").value = parking;
   document.getElementById("f_floor").value = floor;
-  document.getElementById("f_age").value = age !== "--" ? `約 ${age}` : "--";
+  document.getElementById("f_age").value = age ? `約 ${age}` : "--";
   document.getElementById("f_features").value = featureItems.join("\n");
 
   renderOutput();
-  showToast("⚡ 解析成功！文案已排版完畢並自動複製到剪貼簿！");
+  showToast("⚡ 精準解析完成！已自動複製文案到剪貼簿！");
   copyResult();
 }
 
 function renderOutput() {
   const price = document.getElementById("f_price").value || "--";
   const address = document.getElementById("f_address").value || "--";
+  const landPing = document.getElementById("f_landPing").value; // 土地坪數
   const totalPing = document.getElementById("f_totalPing").value || "--";
   const mainPing = document.getElementById("f_mainPing").value || "--";
   const subPing = document.getElementById("f_subPing").value || "--";
@@ -317,10 +346,13 @@ function renderOutput() {
     .map(s => s.startsWith("‧") ? s : `‧ ${s}`)
     .join("\n");
 
+  // 智慧地坪行：若有地坪資訊（透天/別墅）則自動插入該行
+  const landLine = (landPing && landPing.trim().length > 0) ? `地坪｜${landPing}\n` : "";
+
   const fullText = 
 `開價｜${price}
 地址｜${address}
-總建｜${totalPing}
+${landLine}總建｜${totalPing}
 主建｜${mainPing}
 附屬｜${subPing}
 共有｜${sharedPing}
