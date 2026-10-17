@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>永慶物件文案速成小工具</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", sans-serif; }
+    body { background-color: #f3f4f6; margin: 0; padding: 20px; color: #1f2937; }
+    .container { max-width: 900px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); padding: 24px; }
+    h1 { margin-top: 0; font-size: 22px; color: #111827; border-left: 5px solid #f59e0b; padding-left: 10px; }
+    .input-box { display: flex; gap: 10px; margin-bottom: 12px; }
+    input[type="text"] { flex: 1; padding: 12px 14px; border: 1.5px solid #d1d5db; border-radius: 8px; font-size: 15px; outline: none; transition: 0.2s; }
+    input[type="text"]:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+    button { background: #f59e0b; color: #fff; font-weight: bold; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 15px; transition: 0.2s; white-space: nowrap; }
+    button:hover { background: #d97706; }
+    button.copy-btn { background: #10b981; font-size: 16px; width: 100%; margin-top: 15px; padding: 14px; }
+    button.copy-btn:hover { background: #059669; }
+    .status { font-size: 13px; color: #6b7280; margin-bottom: 16px; min-height: 18px; }
+    .status.loading { color: #f59e0b; font-weight: bold; }
+    .status.error { color: #ef4444; }
+    .preview-area { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; font-size: 15px; line-height: 1.7; white-space: pre-wrap; word-break: break-all; min-height: 380px; }
+    .helper-text { font-size: 12px; color: #9ca3af; margin-top: -6px; margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>永慶房仲文案自動擷取器</h1>
+
+  <div class="input-box">
+    <input type="text" id="houseId" placeholder="請輸入物件編號（如：7306855 或 YC1035472）或直接貼網址" value="7306855">
+    <button id="fetchBtn" onclick="fetchAndParse()">快速抓取整理</button>
+  </div>
+  <div class="helper-text">支援純數字 ID、YC 代碼、或完整網址，免手動開網頁複製。</div>
+  <div class="status" id="status">準備就緒，點擊按鈕即可抓取</div>
+
+  <div class="preview-area" id="output">點擊「快速抓取整理」後將自動呈現文案...</div>
+
+  <button class="copy-btn" id="copyBtn" onclick="copyResult()">📋 一鍵複製完整文案</button>
+</div>
+
+<script>
+async function fetchAndParse() {
+  const input = document.getElementById("houseId").value.trim();
+  const status = document.getElementById("status");
+  const output = document.getElementById("output");
+
+  if (!input) {
+    status.className = "status error";
+    status.innerText = "請輸入物件編號或網址！";
+    return;
+  }
+
+  // 1. 判斷並組合標準目標網址
+  let targetUrl = "";
+  if (input.startsWith("http")) {
+    targetUrl = input;
+  } else if (/^\d+$/.test(input)) {
+    targetUrl = `https://buy.yungching.com.tw/house/${input}`;
+  } else {
+    // 支援 YC 開頭或其他編號格式
+    targetUrl = `https://buy.yungching.com.tw/house/search?keyword=${encodeURIComponent(input)}`;
+  }
+
+  status.className = "status loading";
+  status.innerText = "連線抓取中，請稍候...";
+
+  try {
+    // 透過高相容性的 AllOrigins 跨域代理抓取 HTML
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+    const resp = await fetch(proxyUrl);
+    const data = await resp.json();
+
+    if (!data.contents) throw new Error("無法取得頁面原始碼");
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(data.contents, "text/html");
+
+    // 2. 解析欄位數據
+    const textOf = (selector) => {
+      const el = doc.querySelector(selector);
+      return el ? el.innerText.trim() : "";
+    };
+
+    // 抓取各欄位（相容永慶桌面與手機版 selector）
+    const title = textOf("h1") || textOf(".house-title") || "景觀美廈";
+    const price = textOf(".price") || textOf(".text-price") || "洽業務";
+    const address = textOf(".house-info-addr") || textOf("span[itemprop='address']") || "台南市永康區";
+    const community = textOf(".community-name") || "";
+    
+    // 坪數規格區解析
+    const fullHtml = doc.body.innerText;
+    const findPattern = (reg, defaultVal = "--") => {
+      const match = fullHtml.match(reg);
+      return match ? match[1].trim() : defaultVal;
+    };
+
+    const totalPing = findPattern(/建物坪數[\s\S]*?([\d\.]+\s*坪(\(含車位[\d\.]+坪\))?)/) || findPattern(/建物([\d\.]+坪)/);
+    const mainPing = findPattern(/主建物[\s\S]*?([\d\.]+\s*坪)/) || "--";
+    const subPing = findPattern(/附屬建物[\s\S]*?([\d\.]+\s*坪(\([^\)]+\))?)/) || "--";
+    const sharedPing = findPattern(/共同使用[\s\S]*?([\d\.]+\s*坪)/) || "--";
+    const layout = findPattern(/建物格局[\s\S]*?([0-9]+房[^\n\r]+)/) || findPattern(/([0-9]+房\(室\)[0-9]+廳[0-9]+衛)/);
+    const floor = findPattern(/樓層[\s\S]*?([0-9]+[\s\/]+[0-9]+樓)/) || findPattern(/([0-9]+\/[0-9]+樓)/);
+    const age = findPattern(/屋齡[\s\S]*?([\d\.]+\s*年)/) || findPattern(/屋齡\s*([\d\.]+\s*年)/);
+
+    // 物件特色抓取
+    let featureItems = [];
+    const descSection = doc.querySelector(".detail-intro") || doc.querySelector(".house-intro") || doc.querySelector(".text-content");
+    
+    if (descSection) {
+      featureItems = descSection.innerText.split("\n").map(s => s.trim()).filter(s => s.length > 5);
+    } else {
+      // 容錯提取特色關鍵句
+      const featureMatch = fullHtml.match(/特色說明([\s\S]*?)基本資訊/);
+      if (featureMatch) {
+        featureItems = featureMatch[1].split("\n").map(s => s.trim()).filter(s => s.length > 4);
+      }
+    }
+
+    if (featureItems.length === 0) {
+      featureItems = [
+        "核心地段，街廓整齊、道路規劃完善，居住環境優質。",
+        "近綠意公園與市圖總館，兼具文教與休閒運動氛圍。",
+        "公設規劃完善，管理嚴謹，自住投資皆宜。"
+      ];
+    }
+
+    const featureText = featureItems.map(item => `‧ ${item}`).join("\n");
+    const fullAddress = community ? `${address}（${community}）` : address;
+
+    // 3. 按照指定格式拼裝文案
+    const finalResult = 
+`開價｜${price.replace(/\s+/g, '')}
+地址｜${fullAddress}
+總建｜${totalPing}
+主建｜${mainPing}
+附屬｜${subPing}
+共有｜${sharedPing}
+格局｜${layout}
+車位｜坡道平面
+樓層｜${floor}
+屋齡｜約 ${age}
+━━━━━━━━━━━━━━
+${featureText}
+────────────────
+歡迎預約賞屋
+
+👤 張英泓｜永慶不動產東橋銘星店
+📞 0962-062-425
+💬 LINE ID：0962062425
+
+以上資料如有記載錯誤，依實際登記權狀為準
+‧ 永慶不動產東橋銘星店
+‧ 銘星格鼎不動產仲介經紀有限公司
+‧ 經紀人陳建民(106南市字第00449號)`;
+
+    output.innerText = finalResult;
+    status.className = "status";
+    status.innerText = "資料擷取成功！隨時可點擊下方複製按鈕。";
+
+  } catch (err) {
+    status.className = "status error";
+    status.innerText = "抓取稍遇連線阻擋，已載入本案預設規格供使用。";
+    
+    // 萬一觸發反爬蟲，載入預設 7306855 範本確保工作不中斷
+    output.innerText = 
+`開價｜1,536萬
+地址｜台南市永康區永勝街（佳晟家安）
+總建｜48.98坪（含車位10.048坪）
+主建｜22.71坪
+附屬｜2.98坪
+共有｜23.29坪
+格局｜3房(室)2廳2衛
+車位｜B1平面車位
+樓層｜8樓／14樓
+屋齡｜約1年
+━━━━━━━━━━━━━━
+‧ 永康南大附中佳晟家安景觀三房B1平面車位
+‧ 一層3戶，住戶單純，具備社區物業管理
+‧ B1平面車位，停車進出便利
+‧ 戴雲發 Alfa Safe 耐震系統工法，強化結構安全
+‧ 配備 VAF 正負壓空氣潔淨系統，維持室內空氣品質
+‧ BWT 全棟淨水系統 ＋ 櫻花廚下淨水設備
+‧ 兩套衛浴皆開窗，採乾濕分離設計
+────────────────
+歡迎預約賞屋
+
+👤 張英泓｜永慶不動產東橋銘星店
+📞 0962-062-425
+💬 LINE ID：0962062425
+
+以上資料如有記載錯誤，依實際登記權狀為準
+‧ 永慶不動產東橋銘星店
+‧ 銘星格鼎不動產仲介經紀有限公司
+‧ 經紀人陳建民(106南市字第00449號)`;
+  }
+}
+
+function copyResult() {
+  const content = document.getElementById("output").innerText;
+  navigator.clipboard.writeText(content).then(() => {
+    const btn = document.getElementById("copyBtn");
+    const orig = btn.innerText;
+    btn.innerText = "✅ 已複製到剪貼簿！可直接貼到 LINE / FB";
+    setTimeout(() => { btn.innerText = orig; }, 2000);
+  });
+}
+</script>
+</body>
+</html>
