@@ -63,51 +63,45 @@
       padding: 22px; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     }
 
-    .action-bar { display: flex; gap: 10px; flex-wrap: wrap; }
-    .input-wrapper { position: relative; flex: 1; min-width: 280px; }
-    .input-wrapper svg {
-      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-      color: var(--text-muted); pointer-events: none;
+    /* 頂部操作欄 */
+    .paste-zone {
+      position: relative;
+      background: rgba(15, 23, 42, 0.7);
+      border: 2px dashed rgba(245, 158, 11, 0.4);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      transition: 0.2s;
     }
-
-    input[type="text"], textarea {
-      width: 100%; background: var(--input-bg); border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: var(--radius-md); color: var(--text-main); font-size: 15px;
-      padding: 13px 16px 13px 44px; outline: none; transition: 0.2s;
+    .paste-zone:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-glow);
     }
-    input[type="text"]:focus, textarea:focus {
-      border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow);
-      background: rgba(15, 23, 42, 0.85);
+    .paste-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;
     }
-    input::placeholder, textarea::placeholder { color: rgba(148, 163, 184, 0.6); }
-
-    .clear-btn {
-      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-      background: transparent; border: none; color: var(--text-muted); cursor: pointer;
+    .paste-title {
+      font-size: 14px; font-weight: 700; color: #fbbf24; display: flex; align-items: center; gap: 6px;
     }
-
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 13px 20px; border-radius: var(--radius-md); font-size: 15px; font-weight: 700;
-      border: none; cursor: pointer; transition: 0.2s; white-space: nowrap;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-      color: #0f172a; box-shadow: 0 4px 15px var(--primary-glow);
-    }
-    .btn-primary:hover { filter: brightness(1.08); }
-
     .btn-portal {
       background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #f8fafc; font-weight: 600;
+      color: #f8fafc; font-weight: 600; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; text-decoration: none;
     }
-    .btn-portal:hover {
-      background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.3);
-    }
+    .btn-portal:hover { background: rgba(255, 255, 255, 0.18); }
 
-    .step-helper {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-top: 10px; font-size: 13px; color: var(--text-muted); flex-wrap: wrap; gap: 8px;
+    textarea.smart-paste {
+      width: 100%;
+      height: 70px;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 14px;
+      line-height: 1.5;
+      outline: none;
+      resize: none;
+    }
+    textarea.smart-paste::placeholder {
+      color: rgba(148, 163, 184, 0.7);
+      font-weight: 300;
     }
 
     .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -122,6 +116,12 @@
     .field-full { grid-column: span 2; }
     .field-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
     .field-group input { padding: 9px 12px; font-size: 14px; }
+    input[type="text"], textarea {
+      width: 100%; background: var(--input-bg); border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md); color: var(--text-main); font-size: 14px;
+      padding: 9px 12px; outline: none; transition: 0.2s;
+    }
+    input[type="text"]:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
     textarea.feature-editor { min-height: 180px; line-height: 1.6; resize: vertical; padding: 12px 14px; font-size: 13px; }
 
     .output-container { display: flex; flex-direction: column; gap: 12px; }
@@ -131,13 +131,12 @@
       white-space: pre-wrap; word-break: break-all; min-height: 480px; flex: 1;
     }
 
-    .empty-state {
-      height: 100%; min-height: 400px; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; color: var(--text-muted); text-align: center; gap: 12px;
-    }
-    .empty-state svg { opacity: 0.3; }
-
     .btn-group { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-top: 4px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 13px 18px; border-radius: var(--radius-md); font-size: 15px; font-weight: 700;
+      border: none; cursor: pointer; transition: 0.2s; white-space: nowrap;
+    }
     .btn-copy { background: var(--accent-green); color: #fff; }
     .btn-copy:hover { background: var(--accent-green-hover); }
     .btn-line { background: var(--line-color); color: #fff; }
@@ -159,37 +158,27 @@
       <div class="brand-icon">英</div>
       <div class="brand-text">
         <h1>英泓廣告小幫手</h1>
-        <p>貼上物件網址 ‧ 自動抓取精準排版</p>
+        <p>瞬發精準解析 ‧ 永不掉線防護版</p>
       </div>
     </div>
-    <div class="badge-status">高精準直通代理模式</div>
+    <div class="badge-status">高精準解析核心已就緒</div>
   </header>
 
+  <!-- 智慧貼上區 -->
   <section class="card">
-    <div class="action-bar">
-      <button class="btn btn-portal" onclick="openYungChing()">
-        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-        開啟永慶網站
-      </button>
-
-      <div class="input-wrapper">
-        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-        <input type="text" id="targetUrl" placeholder="貼上永慶物件網址（例：https://buy.yungching.com.tw/house/7306855）..." autocomplete="off">
-        <button class="clear-btn" onclick="clearInput()">✕</button>
+    <div class="paste-zone">
+      <div class="paste-header">
+        <span class="paste-title">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+          智慧貼上提取區（在永慶頁面按 Ctrl+A ➔ Ctrl+C 複製後，點這裡按 Ctrl+V 貼上）
+        </span>
+        <a href="https://buy.yungching.com.tw/list/%E5%8F%B0%E5%8D%97%E5%B8%82-_c" target="_blank" class="btn-portal">↗ 開啟永慶網站</a>
       </div>
-
-      <button class="btn btn-primary" id="fetchBtn" onclick="fetchAndParse()">
-        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-        抓取整理資料
-      </button>
-    </div>
-
-    <div class="step-helper">
-      <div>只需貼上永慶網址，系統自動完成所有提取與排版</div>
-      <div id="statusMessage">貼上網址後點擊「抓取整理資料」</div>
+      <textarea class="smart-paste" id="smartInput" placeholder="請直接在此按 Ctrl+V 貼上，系統將在 0.1 秒內自動完成抓取、填入欄位並複製排版文案..." oninput="autoParseInput(this.value)"></textarea>
     </div>
   </section>
 
+  <!-- 主工作區：左側微調、右側預覽 -->
   <div class="main-grid">
     <div class="card">
       <div class="section-title">
@@ -209,7 +198,7 @@
         <div class="field-group"><label>樓層</label><input type="text" id="f_floor" placeholder="例：8樓／14樓" oninput="renderOutput()"></div>
         <div class="field-group"><label>屋齡</label><input type="text" id="f_age" placeholder="例：約 1 年" oninput="renderOutput()"></div>
         <div class="field-group field-full">
-          <label>物件特色說明（每行一項，會自動補上「‧」）</label>
+          <label>物件特色說明（每行一項，自動補上「‧」）</label>
           <textarea class="feature-editor" id="f_features" placeholder="抓取後將自動條列於此，亦可隨時手動編輯增刪..." oninput="renderOutput()"></textarea>
         </div>
       </div>
@@ -217,12 +206,7 @@
 
     <div class="card output-container">
       <div class="section-title"><span>文案預覽（標準格式）</span></div>
-      <div class="preview-box" id="outputPreview">
-        <div class="empty-state">
-          <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          <p>尚未載入資料<br><span style="font-size: 12px;">貼上永慶物件網址並點擊抓取，文案將立即在此呈現</span></p>
-        </div>
-      </div>
+      <div class="preview-box" id="outputPreview">尚未載入資料，請在上方面板按 Ctrl+V 貼上。</div>
       <div class="btn-group">
         <button class="btn btn-copy" onclick="copyResult()">📋 一鍵複製完整文案</button>
         <button class="btn btn-line" onclick="shareToLine()">傳送 LINE</button>
@@ -236,181 +220,82 @@
 <script>
 let currentFullText = "";
 
-function openYungChing() {
-  window.open("https://buy.yungching.com.tw/list/%E5%8F%B0%E5%8D%97%E5%B8%82-_c", "_blank");
-}
+// 核心解析引擎：自動萃取開價、規格與特色
+function autoParseInput(rawText) {
+  if (!rawText || rawText.trim().length < 20) return;
 
-document.getElementById("targetUrl").addEventListener("keypress", (e) => {
-  if (e.key === "Enter") fetchAndParse();
-});
+  const findPattern = (reg, defaultVal = "--") => {
+    const match = rawText.match(reg);
+    return match ? match[1].trim() : defaultVal;
+  };
 
-function clearInput() {
-  document.getElementById("targetUrl").value = "";
-  document.getElementById("targetUrl").focus();
-}
-
-// 智慧清洗網址：從各種複雜長網址中精準抽出標準物件頁面網址
-function cleanUrl(raw) {
-  let u = raw.trim();
-  const m = u.match(/house\/(\d+)/);
-  if (m) {
-    return `https://buy.yungching.com.tw/house/${m[1]}`;
-  }
-  if (/^\d+$/.test(u)) {
-    return `https://buy.yungching.com.tw/house/${u}`;
-  }
-  return u.split("?")[0];
-}
-
-// 多通道自動穿透獲取
-async function fetchCleanHtml(targetUrl) {
-  // 通道 1: AllOrigins raw
-  try {
-    const r1 = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`);
-    if (r1.ok) {
-      const t1 = await r1.text();
-      if (t1.includes("建物坪數") || t1.includes("特色說明") || t1.includes("主建物")) return t1;
-    }
-  } catch (e) {}
-
-  // 通道 2: AllOrigins json
-  try {
-    const r2 = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
-    if (r2.ok) {
-      const d2 = await r2.json();
-      if (d2.contents && (d2.contents.includes("建物坪數") || d2.contents.includes("特色說明") || d2.contents.includes("主建物"))) return d2.contents;
-    }
-  } catch (e) {}
-
-  // 通道 3: CodeTabs
-  try {
-    const r3 = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`);
-    if (r3.ok) {
-      const t3 = await r3.text();
-      if (t3.includes("建物坪數") || t3.includes("特色說明") || t3.includes("主建物")) return t3;
-    }
-  } catch (e) {}
-
-  throw new Error("PROXIES_UNAVAILABLE");
-}
-
-async function fetchAndParse() {
-  const urlInput = document.getElementById("targetUrl").value.trim();
-  const status = document.getElementById("statusMessage");
-  const btn = document.getElementById("fetchBtn");
-
-  if (!urlInput) {
-    showToast("⚠️ 請先貼上永慶物件網址！");
-    return;
+  // 1. 開價
+  let price = "--";
+  const pMatch = rawText.match(/([0-9,]+)\s*萬/);
+  if (pMatch && !pMatch[0].includes("實價")) {
+    price = `${pMatch[1]}萬`;
   }
 
-  const finalUrl = cleanUrl(urlInput);
-
-  btn.disabled = true;
-  btn.style.opacity = "0.7";
-  status.innerText = "連線解析物件資料中，請稍候...";
-  status.style.color = "var(--primary)";
-
-  try {
-    const rawHtml = await fetchCleanHtml(finalUrl);
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(rawHtml, "text/html");
-    const fullHtml = doc.body.innerText;
-
-    const textOf = (selector) => {
-      const el = doc.querySelector(selector);
-      return el ? el.innerText.trim() : "";
-    };
-
-    const findPattern = (reg, defaultVal = "--") => {
-      const match = fullHtml.match(reg);
-      return match ? match[1].trim() : defaultVal;
-    };
-
-    // 1. 開價
-    let price = "--";
-    const pEl = doc.querySelector(".price, .text-price, .house-price");
-    if (pEl && /^[0-9,.]+\s*萬$/.test(pEl.innerText.trim())) {
-      price = pEl.innerText.trim();
-    } else {
-      const m = fullHtml.match(/([0-9,.]+)\s*萬/);
-      price = m ? `${m[1]}萬` : "--";
-    }
-
-    // 2. 地址與社區
-    let address = textOf(".house-info-addr") || textOf("span[itemprop='address']") || textOf(".address");
-    if (!address || address.includes("實價")) {
-      const addrMatch = fullHtml.match(/(台南市[^\s\n\r]+(?:路|街|巷|段|區)[^\s\n\r]*)/);
-      address = addrMatch ? addrMatch[1] : "台南市永康區";
-    }
-    const community = textOf(".community-name");
-    const fullAddress = (community && !address.includes(community)) ? `${address}（${community}）` : address;
-
-    // 3. 坪數規格
-    const totalPing = findPattern(/建物坪數[\s\S]*?([\d\.]+\s*坪(\(含車位[\d\.]+坪\))?)/) || findPattern(/建物([\d\.]+坪)/);
-    const mainPing = findPattern(/主建物[\s\S]*?([\d\.]+\s*坪)/) || "--";
-    const subPing = findPattern(/附屬建物[\s\S]*?([\d\.]+\s*坪(\([^\)]+\))?)/) || "--";
-    const sharedPing = findPattern(/共同使用[\s\S]*?([\d\.]+\s*坪)/) || "--";
-    const layout = findPattern(/建物格局[\s\S]*?([0-9]+房[^\n\r]+)/) || findPattern(/([0-9]+房\(室\)[0-9]+廳[0-9]+衛)/);
-    const floor = findPattern(/樓層[\s\S]*?([0-9]+[\s\/]+[0-9]+樓)/) || findPattern(/([0-9]+\/[0-9]+樓)/);
-    const age = findPattern(/屋齡[\s\S]*?([\d\.]+\s*年)/) || findPattern(/屋齡\s*([\d\.]+\s*年)/);
-
-    // 4. 車位
-    let parking = "坡道平面";
-    if (fullHtml.includes("平面車位") || fullHtml.includes("B1平面")) {
-      const parkMatch = fullHtml.match(/([B0-9]+平面車位)/);
-      parking = parkMatch ? parkMatch[1] : "坡道平面";
-    } else if (fullHtml.includes("機械車位")) {
-      parking = "機械車位";
-    }
-
-    // 5. 特色說明
-    let featureItems = [];
-    const descSection = doc.querySelector(".detail-intro, .house-intro, .text-content");
-    if (descSection) {
-      featureItems = descSection.innerText.split("\n").map(s => s.trim().replace(/^[‧•\-\*]\s*/, "")).filter(s => s.length > 5);
-    } else {
-      const featureMatch = fullHtml.match(/特色說明([\s\S]*?)基本資訊/);
-      if (featureMatch) {
-        featureItems = featureMatch[1].split("\n").map(s => s.trim().replace(/^[‧•\-\*]\s*/, "")).filter(s => s.length > 4);
-      }
-    }
-
-    if (featureItems.length === 0) {
-      featureItems = [
-        "核心地段，街廓整齊、道路規劃完善，居住環境優質。",
-        "近綠意公園與市圖總館，兼具文教與休閒運動氛圍。",
-        "公設規劃完善，管理嚴謹，自住投資皆宜。"
-      ];
-    }
-
-    // 回填至左側微調編輯表單
-    document.getElementById("f_price").value = price.replace(/\s+/g, '');
-    document.getElementById("f_address").value = fullAddress;
-    document.getElementById("f_totalPing").value = totalPing;
-    document.getElementById("f_mainPing").value = mainPing;
-    document.getElementById("f_subPing").value = subPing;
-    document.getElementById("f_sharedPing").value = sharedPing;
-    document.getElementById("f_layout").value = layout;
-    document.getElementById("f_parking").value = parking;
-    document.getElementById("f_floor").value = floor;
-    document.getElementById("f_age").value = age !== "--" ? `約 ${age}` : "--";
-    document.getElementById("f_features").value = featureItems.join("\n");
-
-    renderOutput();
-
-    status.innerText = "✅ 資料擷取成功！隨時可微調或點擊複製。";
-    status.style.color = "var(--accent-green)";
-    showToast("⚡ 抓取成功！文案已排版完畢");
-
-  } catch (err) {
-    status.innerText = "❌ 暫時無法連線該網頁，請確認貼上的是否為物件詳細頁網址。";
-    status.style.color = "#ef4444";
-    showToast("⚠️ 抓取失敗，請確認網址");
-  } finally {
-    btn.disabled = false;
-    btn.style.opacity = "1";
+  // 2. 地址與社區
+  let address = findPattern(/(台南市[^\s\n\r]+(?:路|街|巷|段|區)[^\s\n\r]*)/, "台南市永康區");
+  const commMatch = rawText.match(/社區[\s\S]*?([^\s\n\r]+)/) || rawText.match(/([^\s\n\r]+)\s*\|?\s*台南市/);
+  let community = "";
+  if (commMatch && !commMatch[1].includes("買屋") && !commMatch[1].includes("永慶")) {
+    community = commMatch[1];
   }
+  const fullAddress = (community && !address.includes(community)) ? `${address}（${community}）` : address;
+
+  // 3. 坪數
+  const totalPing = findPattern(/建物坪數[\s\S]*?([\d\.]+\s*坪(\(含車位[\d\.]+坪\))?)/) || findPattern(/建物([\d\.]+坪)/);
+  const mainPing = findPattern(/主建物[\s\S]*?([\d\.]+\s*坪)/) || "--";
+  const subPing = findPattern(/附屬建物[\s\S]*?([\d\.]+\s*坪(\([^\)]+\))?)/) || "--";
+  const sharedPing = findPattern(/共同使用[\s\S]*?([\d\.]+\s*坪)/) || "--";
+  const layout = findPattern(/建物格局[\s\S]*?([0-9]+房[^\n\r]+)/) || findPattern(/([0-9]+房\(室\)[0-9]+廳[0-9]+衛)/);
+  const floor = findPattern(/樓層[\s\S]*?([0-9]+[\s\/]+[0-9]+樓)/) || findPattern(/([0-9]+\/[0-9]+樓)/);
+  const age = findPattern(/屋齡[\s\S]*?([\d\.]+\s*年)/) || findPattern(/屋齡\s*([\d\.]+\s*年)/);
+
+  // 4. 車位
+  let parking = "坡道平面";
+  if (rawText.includes("平面車位") || rawText.includes("B1平面")) {
+    const parkMatch = rawText.match(/([B0-9]+平面車位)/);
+    parking = parkMatch ? parkMatch[1] : "坡道平面";
+  } else if (rawText.includes("機械車位")) {
+    parking = "機械車位";
+  }
+
+  // 5. 特色說明
+  let featureItems = [];
+  const featMatch = rawText.match(/特色說明([\s\S]*?)基本資訊/);
+  if (featMatch) {
+    featureItems = featMatch[1].split("\n")
+      .map(s => s.trim().replace(/^[‧•\-\*]\s*/, ""))
+      .filter(s => s.length > 5 && !s.includes("房貸") && !s.includes("各項面積"));
+  }
+
+  if (featureItems.length === 0) {
+    featureItems = [
+      "核心地段，街廓整齊、道路規劃完善，居住環境優質。",
+      "近綠意公園與市圖總館，兼具文教與休閒運動氛圍。",
+      "公設規劃完善，管理嚴謹，自住投資皆宜。"
+    ];
+  }
+
+  // 自動填入左側欄位
+  document.getElementById("f_price").value = price;
+  document.getElementById("f_address").value = fullAddress;
+  document.getElementById("f_totalPing").value = totalPing;
+  document.getElementById("f_mainPing").value = mainPing;
+  document.getElementById("f_subPing").value = subPing;
+  document.getElementById("f_sharedPing").value = sharedPing;
+  document.getElementById("f_layout").value = layout;
+  document.getElementById("f_parking").value = parking;
+  document.getElementById("f_floor").value = floor;
+  document.getElementById("f_age").value = age !== "--" ? `約 ${age}` : "--";
+  document.getElementById("f_features").value = featureItems.join("\n");
+
+  renderOutput();
+  showToast("⚡ 解析成功！文案已排版完畢並自動複製到剪貼簿！");
+  copyResult();
 }
 
 function renderOutput() {
@@ -462,18 +347,15 @@ ${featureList}
 }
 
 function copyResult() {
-  if (!currentFullText || currentFullText.includes("開價｜--")) {
-    showToast("⚠️ 目前尚無文案可供複製");
-    return;
-  }
+  if (!currentFullText || currentFullText.includes("開價｜--")) return;
   navigator.clipboard.writeText(currentFullText).then(() => {
     showToast("📋 已複製到剪貼簿！可直接貼至 LINE / FB");
   });
 }
 
 function shareToLine() {
-  if (!currentFullText) {
-    showToast("⚠️ 請先抓取物件後再分享");
+  if (!currentFullText || currentFullText.includes("開價｜--")) {
+    showToast("⚠️ 請先貼上物件資料");
     return;
   }
   const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(currentFullText)}`;
