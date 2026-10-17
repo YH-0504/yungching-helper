@@ -479,4 +479,302 @@
       <div class="preview-box" id="outputPreview">
         <div class="empty-state">
           <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          <p>尚未載入資料<br><span style="font-size:
+          <p>尚未載入資料<br><span style="font-size: 12px;">在上方輸入編號並點擊抓取，文案將立即產生於此</span></p>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-copy" onclick="copyResult()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+          一鍵複製完整文案
+        </button>
+        <button class="btn btn-line" onclick="shareToLine()">
+          傳送 LINE
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">📋 已複製到剪貼簿，可直接貼到 LINE / FB！</div>
+
+<script>
+let currentFullText = "";
+
+document.getElementById("houseId").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") fetchAndParse();
+});
+
+function clearSearch() {
+  document.getElementById("houseId").value = "";
+  document.getElementById("houseId").focus();
+}
+
+function addHistory(id) {
+  let hist = JSON.parse(localStorage.getItem("yc_hist") || "[]");
+  hist = [id, ...hist.filter(x => x !== id)].slice(0, 5);
+  localStorage.setItem("yc_hist", JSON.stringify(hist));
+  renderHistory();
+}
+
+function renderHistory() {
+  const container = document.getElementById("historyChips");
+  const hist = JSON.parse(localStorage.getItem("yc_hist") || "[]");
+  if (hist.length === 0) {
+    container.style.display = "none";
+    return;
+  }
+  container.style.display = "flex";
+  container.innerHTML = `<span style="font-size: 12px; opacity: 0.6;">歷史紀錄：</span>` + 
+    hist.map(item => `<span class="chip" onclick="quickSearch('${item}')">${item}</span>`).join("");
+}
+
+function quickSearch(id) {
+  document.getElementById("houseId").value = id;
+  fetchAndParse();
+}
+
+// 智慧多通道抓取：依序切換直到取得非防爬首頁的真實頁面
+async function fetchHtmlWithFallback(targetUrl) {
+  const proxyList = [
+    // 代理 1: AllOrigins (解析度最穩)
+    async (url) => {
+      const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      return data.contents;
+    },
+    // 代理 2: CodeTabs
+    async (url) => {
+      const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`);
+      return await res.text();
+    },
+    // 代理 3: 專屬 Worker
+    async (url) => {
+      const res = await fetch(`https://house-proxy.s3737123456789.workers.dev?url=${encodeURIComponent(url)}`);
+      return await res.text();
+    }
+  ];
+
+  for (let fetcher of proxyList) {
+    try {
+      const html = await fetcher(targetUrl);
+      // 驗證是否拿到真實物件頁（必須含有格局或坪數關鍵字，避開導向首頁）
+      if (html && (html.includes("建物坪數") || html.includes("建物格局") || html.includes("房(室)") || html.includes("特色說明"))) {
+        return html;
+      }
+    } catch (e) {
+      console.warn("Proxy 嘗試切換中...", e);
+    }
+  }
+  throw new Error("所有線路皆未能取得有效物件資訊");
+}
+
+async function fetchAndParse() {
+  const input = document.getElementById("houseId").value.trim();
+  const status = document.getElementById("statusMessage");
+  const btn = document.getElementById("fetchBtn");
+
+  if (!input) {
+    showToast("⚠️ 請先輸入物件編號或網址");
+    return;
+  }
+
+  let targetUrl = "";
+  if (input.startsWith("http")) {
+    targetUrl = input;
+  } else if (/^\d+$/.test(input)) {
+    targetUrl = `https://buy.yungching.com.tw/house/${input}`;
+  } else {
+    targetUrl = `https://buy.yungching.com.tw/house/search?keyword=${encodeURIComponent(input)}`;
+  }
+
+  btn.disabled = true;
+  btn.style.opacity = "0.7";
+  status.innerText = "⚡ 正在穿透抓取資料中...";
+  status.style.color = "var(--primary)";
+
+  try {
+    const html = await fetchHtmlWithFallback(targetUrl);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+
+    const textOf = (selector) => {
+      const el = doc.querySelector(selector);
+      return el ? el.innerText.trim() : "";
+    };
+
+    const fullHtml = doc.body.innerText;
+    const findPattern = (reg, defaultVal = "") => {
+      const match = fullHtml.match(reg);
+      return match ? match[1].trim() : defaultVal;
+    };
+
+    // 精準開價抓取（排除實價登錄廣告與干擾詞）
+    let price = "";
+    const priceCandidates = Array.from(doc.querySelectorAll(".price, .text-price, .house-price, span, div"))
+      .map(el => el.innerText.trim())
+      .filter(t => /^[0-9,.]+\s*萬$/.test(t));
+    
+    if (priceCandidates.length > 0) {
+      price = priceCandidates[0];
+    } else {
+      const m = fullHtml.match(/([0-9,.]+)\s*萬/);
+      price = m ? `${m[1]}萬` : "洽業務";
+    }
+
+    // 地址與社區
+    let address = textOf(".house-info-addr") || textOf("span[itemprop='address']") || textOf(".address");
+    if (!address) {
+      const addrMatch = fullHtml.match(/(台南市[^\s\n\r]+(?:路|街|巷|段|區)[^\s\n\r]*)/);
+      address = addrMatch ? addrMatch[1] : "台南市永康區";
+    }
+    const community = textOf(".community-name");
+    const fullAddress = (community && !address.includes(community)) ? `${address}（${community}）` : address;
+
+    // 坪數數據
+    const totalPing = findPattern(/建物坪數[\s\S]*?([\d\.]+\s*坪(\(含車位[\d\.]+坪\))?)/) || findPattern(/建物([\d\.]+坪)/);
+    const mainPing = findPattern(/主建物[\s\S]*?([\d\.]+\s*坪)/);
+    const subPing = findPattern(/附屬建物[\s\S]*?([\d\.]+\s*坪(\([^\)]+\))?)/);
+    const sharedPing = findPattern(/共同使用[\s\S]*?([\d\.]+\s*坪)/);
+    const layout = findPattern(/建物格局[\s\S]*?([0-9]+房[^\n\r]+)/) || findPattern(/([0-9]+房\(室\)[0-9]+廳[0-9]+衛)/);
+    const floor = findPattern(/樓層[\s\S]*?([0-9]+[\s\/]+[0-9]+樓)/) || findPattern(/([0-9]+\/[0-9]+樓)/);
+    const age = findPattern(/屋齡[\s\S]*?([\d\.]+\s*年)/) || findPattern(/屋齡\s*([\d\.]+\s*年)/);
+
+    // 車位類型解析
+    let parking = "坡道平面";
+    if (fullHtml.includes("平面車位") || fullHtml.includes("B1平面")) {
+      parking = fullHtml.match(/([B0-9]+平面車位)/) ? fullHtml.match(/([B0-9]+平面車位)/)[1] : "坡道平面";
+    } else if (fullHtml.includes("機械車位")) {
+      parking = "機械車位";
+    }
+
+    // 物件特色條列
+    let features = [];
+    const descSection = doc.querySelector(".detail-intro") || doc.querySelector(".house-intro") || doc.querySelector(".text-content");
+    if (descSection) {
+      features = descSection.innerText.split("\n").map(s => s.trim().replace(/^[‧•\-\*]\s*/, "")).filter(s => s.length > 5);
+    } else {
+      const match = fullHtml.match(/特色說明([\s\S]*?)基本資訊/);
+      if (match) {
+        features = match[1].split("\n").map(s => s.trim().replace(/^[‧•\-\*]\s*/, "")).filter(s => s.length > 5);
+      }
+    }
+
+    if (features.length === 0) {
+      features = [
+        "優質核心地段，周邊生活機能完整便捷。",
+        "採光通風良好，格局方正動線佳。",
+        "屋況極佳，社區管理嚴謹，自住換屋首選。"
+      ];
+    }
+
+    // 填回表單
+    document.getElementById("f_price").value = price.replace(/\s+/g, '');
+    document.getElementById("f_address").value = fullAddress;
+    document.getElementById("f_totalPing").value = totalPing;
+    document.getElementById("f_mainPing").value = mainPing;
+    document.getElementById("f_subPing").value = subPing;
+    document.getElementById("f_sharedPing").value = sharedPing;
+    document.getElementById("f_layout").value = layout;
+    document.getElementById("f_parking").value = parking;
+    document.getElementById("f_floor").value = floor;
+    document.getElementById("f_age").value = age ? `約 ${age}` : "";
+    document.getElementById("f_features").value = features.join("\n");
+
+    addHistory(input);
+    renderOutput();
+
+    status.innerText = "✅ 抓取整理完成！格式精準成型。";
+    status.style.color = "var(--accent-green)";
+    showToast("⚡ 抓取成功！文案已排版完畢");
+
+  } catch (err) {
+    console.error(err);
+    status.innerText = "❌ 暫時無法連線該物件，請確認編號是否正確。";
+    status.style.color = "#ef4444";
+    showToast("⚠️ 抓取失敗，請確認編號");
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = "1";
+  }
+}
+
+function renderOutput() {
+  const price = document.getElementById("f_price").value || "--";
+  const address = document.getElementById("f_address").value || "--";
+  const totalPing = document.getElementById("f_totalPing").value || "--";
+  const mainPing = document.getElementById("f_mainPing").value || "--";
+  const subPing = document.getElementById("f_subPing").value || "--";
+  const sharedPing = document.getElementById("f_sharedPing").value || "--";
+  const layout = document.getElementById("f_layout").value || "--";
+  const parking = document.getElementById("f_parking").value || "坡道平面";
+  const floor = document.getElementById("f_floor").value || "--";
+  const age = document.getElementById("f_age").value || "--";
+
+  const rawFeatures = document.getElementById("f_features").value;
+  const featureList = rawFeatures.split("\n")
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
+    .map(s => s.startsWith("‧") ? s : `‧ ${s}`)
+    .join("\n");
+
+  const fullText = 
+`開價｜${price}
+地址｜${address}
+總建｜${totalPing}
+主建｜${mainPing}
+附屬｜${subPing}
+共有｜${sharedPing}
+格局｜${layout}
+車位｜${parking}
+樓層｜${floor}
+屋齡｜${age}
+━━━━━━━━━━━━━━
+${featureList}
+────────────────
+歡迎預約賞屋
+
+👤 張英泓｜永慶不動產東橋銘星店
+📞 0962-062-425
+💬 LINE ID：0962062425
+
+以上資料如有記載錯誤，依實際登記權狀為準
+‧ 永慶不動產東橋銘星店
+‧ 銘星格鼎不動產仲介經紀有限公司
+‧ 經紀人陳建民(106南市字第00449號)`;
+
+  currentFullText = fullText;
+  document.getElementById("outputPreview").innerText = fullText;
+}
+
+function copyResult() {
+  if (!currentFullText) {
+    showToast("⚠️ 目前尚無文案可供複製");
+    return;
+  }
+  navigator.clipboard.writeText(currentFullText).then(() => {
+    showToast("📋 已複製到剪貼簿！可直接貼至 LINE / FB");
+  });
+}
+
+function shareToLine() {
+  if (!currentFullText) {
+    showToast("⚠️ 請先抓取物件後再分享");
+    return;
+  }
+  const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(currentFullText)}`;
+  window.open(lineUrl, '_blank');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById("toast");
+  toast.innerText = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2500);
+}
+
+renderHistory();
+</script>
+
+</body>
+</html>
