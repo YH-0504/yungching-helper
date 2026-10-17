@@ -63,7 +63,6 @@
       padding: 22px; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     }
 
-    /* 網址輸入與導航按鈕 */
     .action-bar { display: flex; gap: 10px; flex-wrap: wrap; }
     .input-wrapper { position: relative; flex: 1; min-width: 280px; }
     .input-wrapper svg {
@@ -89,7 +88,7 @@
 
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 13px 20px; border-radius: var(--radius-md); font-size: 15px; font-weight: 700;
+      padding: 13px 18px; border-radius: var(--radius-md); font-size: 15px; font-weight: 700;
       border: none; cursor: pointer; transition: 0.2s; white-space: nowrap;
     }
     .btn-primary {
@@ -111,9 +110,7 @@
       margin-top: 10px; font-size: 13px; color: var(--text-muted); flex-wrap: wrap; gap: 8px;
     }
     .step-tags { display: flex; gap: 8px; align-items: center; font-size: 12px; }
-    .step-tag {
-      background: rgba(255, 255, 255, 0.06); padding: 3px 8px; border-radius: 4px;
-    }
+    .step-tag { background: rgba(255, 255, 255, 0.06); padding: 3px 8px; border-radius: 4px; }
 
     .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
@@ -167,10 +164,9 @@
         <p>貼上物件網址 ‧ 自動抓取精準排版</p>
       </div>
     </div>
-    <div class="badge-status">網址直通解析模組</div>
+    <div class="badge-status">高相容抓取節點已就緒</div>
   </header>
 
-  <!-- 操作卡片 -->
   <section class="card">
     <div class="action-bar">
       <!-- 點開永慶網站按鈕 -->
@@ -182,7 +178,7 @@
       <!-- 網址輸入框 -->
       <div class="input-wrapper">
         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-        <input type="text" id="targetUrl" placeholder="在此貼上永慶物件完整網址（例如：https://buy.yungching.com.tw/house/7306855）..." autocomplete="off">
+        <input type="text" id="targetUrl" placeholder="貼上永慶物件網址（例：https://buy.yungching.com.tw/house/7306855）..." autocomplete="off">
         <button class="clear-btn" onclick="clearInput()">✕</button>
       </div>
 
@@ -195,15 +191,14 @@
 
     <div class="step-helper">
       <div class="step-tags">
-        <span class="step-tag">步驟 1：點按鈕去永慶搜物件</span>
-        <span class="step-tag">步驟 2：複製物件網址並貼回</span>
-        <span class="step-tag">步驟 3：點抓取並一鍵複製</span>
+        <span class="step-tag">步驟 1：開啟永慶網站查物件</span>
+        <span class="step-tag">步驟 2：複製物件詳細頁網址</span>
+        <span class="step-tag">步驟 3：貼上並點擊抓取</span>
       </div>
       <div id="statusMessage">貼上網址後點擊「抓取整理資料」</div>
     </div>
   </section>
 
-  <!-- 主工作區：左側微調、右側預覽 -->
   <div class="main-grid">
     <div class="card">
       <div class="section-title">
@@ -250,12 +245,10 @@
 <script>
 let currentFullText = "";
 
-// 點開永慶網站（開新分頁導向台南市列表，方便直接在上面搜編號）
 function openYungChing() {
   window.open("https://buy.yungching.com.tw/list/%E5%8F%B0%E5%8D%97%E5%B8%82-_c", "_blank");
 }
 
-// 支援在網址框按下 Enter 直接抓取
 document.getElementById("targetUrl").addEventListener("keypress", (e) => {
   if (e.key === "Enter") fetchAndParse();
 });
@@ -265,7 +258,35 @@ function clearInput() {
   document.getElementById("targetUrl").focus();
 }
 
-// 核心抓取程序：直接解析物件詳細頁
+// 多通道自動備援抓取器：解決單一代理偶發被擋問題
+async function fetchWithFallback(targetUrl) {
+  const proxies = [
+    // 通道 1：AllOrigins
+    async (u) => {
+      const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`);
+      const data = await res.json();
+      return data.contents;
+    },
+    // 通道 2：CodeTabs
+    async (u) => {
+      const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`);
+      return await res.text();
+    }
+  ];
+
+  for (const proxyFn of proxies) {
+    try {
+      const html = await proxyFn(targetUrl);
+      if (html && (html.includes("坪") || html.includes("房") || html.includes("萬"))) {
+        return html;
+      }
+    } catch (e) {
+      console.warn("Proxy 切換備援中...", e);
+    }
+  }
+  throw new Error("ALL_PROXIES_BLOCKED");
+}
+
 async function fetchAndParse() {
   const urlInput = document.getElementById("targetUrl").value.trim();
   const status = document.getElementById("statusMessage");
@@ -276,10 +297,9 @@ async function fetchAndParse() {
     return;
   }
 
-  // 確保是有效網址格式
+  // 網址正規化防呆
   let finalUrl = urlInput;
   if (!finalUrl.startsWith("http")) {
-    // 若只輸入了純數字 ID（如 7306855），貼心自動拼成完整網址
     if (/^\d+$/.test(finalUrl)) {
       finalUrl = `https://buy.yungching.com.tw/house/${finalUrl}`;
     } else {
@@ -293,20 +313,10 @@ async function fetchAndParse() {
   status.style.color = "var(--primary)";
 
   try {
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(finalUrl)}`;
-    const resp = await fetch(proxyUrl);
-    const data = await resp.json();
-
-    if (!data.contents) throw new Error("EMPTY_DATA");
-
+    const rawHtml = await fetchWithFallback(finalUrl);
     const parser = new DOMParser();
-    const doc = parser.parseFromString(data.contents, "text/html");
+    const doc = parser.parseFromString(rawHtml, "text/html");
     const fullHtml = doc.body.innerText;
-
-    // 基本驗證：確認是否拿到物件詳細頁
-    if (!fullHtml.includes("坪") && !fullHtml.includes("房") && !fullHtml.includes("萬")) {
-      throw new Error("NOT_HOUSE_PAGE");
-    }
 
     const textOf = (selector) => {
       const el = doc.querySelector(selector);
@@ -355,7 +365,7 @@ async function fetchAndParse() {
       parking = "機械車位";
     }
 
-    // 5. 特色條列
+    // 5. 特色說明
     let featureItems = [];
     const descSection = doc.querySelector(".detail-intro, .house-intro, .text-content");
     if (descSection) {
@@ -375,7 +385,7 @@ async function fetchAndParse() {
       ];
     }
 
-    // 回填至左側微調欄位
+    // 回填至編輯表單
     document.getElementById("f_price").value = price.replace(/\s+/g, '');
     document.getElementById("f_address").value = fullAddress;
     document.getElementById("f_totalPing").value = totalPing;
@@ -395,16 +405,15 @@ async function fetchAndParse() {
     showToast("⚡ 抓取成功！文案已排版完畢");
 
   } catch (err) {
-    status.innerText = "❌ 抓取失敗，請確認貼上的是否為「物件詳細頁」網址。";
+    status.innerText = "❌ 暫時無法連線該網頁，請確認是否為永慶物件詳細頁。";
     status.style.color = "#ef4444";
-    showToast("⚠️ 請確認貼上正確的物件網址");
+    showToast("⚠️ 抓取失敗，請確認網址");
   } finally {
     btn.disabled = false;
     btn.style.opacity = "1";
   }
 }
 
-// 即時渲染文案
 function renderOutput() {
   const price = document.getElementById("f_price").value || "--";
   const address = document.getElementById("f_address").value || "--";
@@ -453,7 +462,6 @@ ${featureList}
   document.getElementById("outputPreview").innerText = fullText;
 }
 
-// 一鍵複製
 function copyResult() {
   if (!currentFullText) {
     showToast("⚠️ 目前尚無文案可供複製");
@@ -464,7 +472,6 @@ function copyResult() {
   });
 }
 
-// 傳送 LINE
 function shareToLine() {
   if (!currentFullText) {
     showToast("⚠️ 請先抓取物件後再分享");
