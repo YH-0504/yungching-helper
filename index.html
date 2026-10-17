@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>英泓廣告小幫手</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -153,14 +153,14 @@
         <p>一鍵抓取永慶物件 ‧ 格式精準成型</p>
       </div>
     </div>
-    <div class="badge-status">原生穩定代理已就緒</div>
+    <div class="badge-status">台南買屋列表搜尋連線中</div>
   </header>
 
   <section class="card">
     <div class="search-box">
       <div class="input-wrapper">
         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-        <input type="text" id="houseId" placeholder="輸入編號（如：7306855 或 1081486 或 YC1081486）..." autocomplete="off">
+        <input type="text" id="houseId" placeholder="輸入物件編號（例如：1081486 或 YC1004507 或網址）..." autocomplete="off">
         <button class="clear-btn" onclick="clearSearch()">✕</button>
       </div>
       <button class="btn btn-primary" id="fetchBtn" onclick="fetchAndParse()">
@@ -245,23 +245,12 @@ function quickSearch(id) {
   fetchAndParse();
 }
 
-// 智慧型網址解析器：自動修復 1 開頭省略 YC 的案號
-function resolveTargetUrl(raw) {
-  let input = raw.trim();
-  if (input.startsWith("http")) return input;
-  
-  // 判斷 1：若為 7 開頭的 7 位數字（例如 7306855）為標準 house ID
-  if (/^7\d{6}$/.test(input)) {
-    return `https://buy.yungching.com.tw/house/${input}`;
-  }
-
-  // 判斷 2：若為 1 開頭的 7 位數字（例如 1081486），代表省略了 YC，自動補齊
-  if (/^1\d{6}$/.test(input)) {
-    input = "YC" + input;
-  }
-
-  // 判斷 3：YC 開頭或其他關鍵字，走精準搜尋重定向
-  return `https://buy.yungching.com.tw/house/search?keyword=${encodeURIComponent(input)}`;
+// 透過 AllOrigins 抓取頁面原始碼
+async function fetchPage(url) {
+  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+  const resp = await fetch(proxyUrl);
+  const data = await resp.json();
+  return data.contents;
 }
 
 async function fetchAndParse() {
@@ -274,40 +263,48 @@ async function fetchAndParse() {
     return;
   }
 
-  const targetUrl = resolveTargetUrl(rawInput);
   btn.disabled = true;
   btn.style.opacity = "0.7";
-  status.innerText = "連線抓取中，請稍候...";
+  status.innerText = "正在連線台南買屋列表搜尋編號...";
   status.style.color = "var(--primary)";
 
   try {
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-    const resp = await fetch(proxyUrl);
-    const data = await resp.json();
+    let detailHtml = "";
 
-    if (!data.contents) throw new Error("EMPTY_DATA");
+    // 情況 A：如果使用者直接貼上完整物件網址（含 /house/）
+    if (rawInput.includes("buy.yungching.com.tw/house/")) {
+      detailHtml = await fetchPage(rawInput);
+    } else {
+      // 情況 B：在 https://buy.yungching.com.tw/list/台南市-_c 列表搜尋欄中精準查詢該編號
+      const searchUrl = `https://buy.yungching.com.tw/list/台南市-_c?q=${encodeURIComponent(rawInput)}`;
+      const listHtml = await fetchPage(searchUrl);
 
-    const parser = new DOMParser();
-    let doc = parser.parseFromString(data.contents, "text/html");
+      if (!listHtml) throw new Error("EMPTY_LIST");
 
-    // 若透過 search 轉跳，檢查頁面中是否有該物件的直接超連結並自動進入
-    const houseLink = doc.querySelector("a[href*='/house/']");
-    if (houseLink && !data.contents.includes("建物坪數")) {
-      const nextHref = houseLink.getAttribute("href");
-      const fullNextUrl = nextHref.startsWith("http") ? nextHref : `https://buy.yungching.com.tw${nextHref}`;
-      const nextResp = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(fullNextUrl)}`);
-      const nextData = await nextResp.json();
-      if (nextData.contents) {
-        doc = parser.parseFromString(nextData.contents, "text/html");
+      const listParser = new DOMParser();
+      const listDoc = listParser.parseFromString(listHtml, "text/html");
+
+      // 從搜尋結果清單中，抓取第一筆物件的真實專屬超連結（/house/XXXXXXX）
+      const firstHouseLink = listDoc.querySelector(".item-title a, a[href*='/house/']");
+      
+      if (!firstHouseLink) {
+        throw new Error("NOT_FOUND_IN_LIST");
       }
+
+      let houseHref = firstHouseLink.getAttribute("href");
+      const fullDetailUrl = houseHref.startsWith("http") ? houseHref : `https://buy.yungching.com.tw${houseHref}`;
+
+      status.innerText = "已找到物件，正在擷取詳細規格與特色...";
+      detailHtml = await fetchPage(fullDetailUrl);
     }
 
+    if (!detailHtml || !detailHtml.includes("坪")) {
+      throw new Error("DETAIL_PARSE_FAIL");
+    }
+
+    // 開始詳細解析物件頁面
+    const doc = (new DOMParser()).parseFromString(detailHtml, "text/html");
     const fullHtml = doc.body.innerText;
-
-    // 關鍵防呆驗證：必須含有真正房屋資訊
-    if (!fullHtml.includes("坪") && !fullHtml.includes("房") && !fullHtml.includes("萬")) {
-      throw new Error("NOT_FOUND");
-    }
 
     const textOf = (selector) => {
       const el = doc.querySelector(selector);
@@ -319,7 +316,7 @@ async function fetchAndParse() {
       return match ? match[1].trim() : defaultVal;
     };
 
-    // 開價抓取（嚴格排除導覽列干擾）
+    // 1. 開價
     let price = "--";
     const pEl = doc.querySelector(".price, .text-price, .house-price");
     if (pEl && /^[0-9,.]+\s*萬$/.test(pEl.innerText.trim())) {
@@ -329,7 +326,7 @@ async function fetchAndParse() {
       price = m ? `${m[1]}萬` : "--";
     }
 
-    // 地址與社區
+    // 2. 地址與社區
     let address = textOf(".house-info-addr") || textOf("span[itemprop='address']") || textOf(".address");
     if (!address || address.includes("實價")) {
       const addrMatch = fullHtml.match(/(台南市[^\s\n\r]+(?:路|街|巷|段|區)[^\s\n\r]*)/);
@@ -338,7 +335,7 @@ async function fetchAndParse() {
     const community = textOf(".community-name");
     const fullAddress = (community && !address.includes(community)) ? `${address}（${community}）` : address;
 
-    // 坪數
+    // 3. 坪數規格
     const totalPing = findPattern(/建物坪數[\s\S]*?([\d\.]+\s*坪(\(含車位[\d\.]+坪\))?)/) || findPattern(/建物([\d\.]+坪)/);
     const mainPing = findPattern(/主建物[\s\S]*?([\d\.]+\s*坪)/);
     const subPing = findPattern(/附屬建物[\s\S]*?([\d\.]+\s*坪(\([^\)]+\))?)/);
@@ -347,7 +344,7 @@ async function fetchAndParse() {
     const floor = findPattern(/樓層[\s\S]*?([0-9]+[\s\/]+[0-9]+樓)/) || findPattern(/([0-9]+\/[0-9]+樓)/);
     const age = findPattern(/屋齡[\s\S]*?([\d\.]+\s*年)/) || findPattern(/屋齡\s*([\d\.]+\s*年)/);
 
-    // 車位
+    // 4. 車位
     let parking = "坡道平面";
     if (fullHtml.includes("平面車位") || fullHtml.includes("B1平面")) {
       const parkMatch = fullHtml.match(/([B0-9]+平面車位)/);
@@ -356,7 +353,7 @@ async function fetchAndParse() {
       parking = "機械車位";
     }
 
-    // 特色
+    // 5. 特色說明條列
     let featureItems = [];
     const descSection = doc.querySelector(".detail-intro, .house-intro, .text-content");
     if (descSection) {
@@ -376,7 +373,7 @@ async function fetchAndParse() {
       ];
     }
 
-    // 填回表單
+    // 回填編輯表單
     document.getElementById("f_price").value = price.replace(/\s+/g, '');
     document.getElementById("f_address").value = fullAddress;
     document.getElementById("f_totalPing").value = totalPing;
@@ -397,9 +394,9 @@ async function fetchAndParse() {
     showToast("⚡ 抓取成功！文案已排版完畢");
 
   } catch (err) {
-    status.innerText = "❌ 查無此物件或編號有誤，請確認是否為有效物件。";
+    status.innerText = "❌ 在台南買屋列表找不到該物件編號，請確認編號是否正確。";
     status.style.color = "#ef4444";
-    showToast("⚠️ 查無資料，請核對編號");
+    showToast("⚠️ 查無物件，請核對編號");
   } finally {
     btn.disabled = false;
     btn.style.opacity = "1";
