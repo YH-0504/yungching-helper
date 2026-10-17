@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>英泓廣告小幫手</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -25,13 +25,7 @@
       --radius-md: 10px;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif; }
     body {
       background-color: var(--bg-dark);
       background-image: 
@@ -44,564 +38,306 @@
       justify-content: center;
     }
 
-    .container {
-      width: 100%;
-      max-width: 1080px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    /* 頂部標頭 */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 4px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
+    .container { width: 100%; max-width: 1080px; display: flex; flex-direction: column; gap: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+    .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon {
-      width: 42px;
-      height: 42px;
-      background: linear-gradient(135deg, #f59e0b, #ea580c);
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 900;
-      font-size: 20px;
-      color: #fff;
-      box-shadow: 0 4px 15px var(--primary-glow);
+      width: 42px; height: 42px; background: linear-gradient(135deg, #f59e0b, #ea580c);
+      border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 20px; color: #fff; box-shadow: 0 4px 15px var(--primary-glow);
     }
-
-    .brand-text h1 {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .brand-text p {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
+    .brand-text h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    .brand-text p { font-size: 13px; color: var(--text-muted); }
     .badge-status {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      background: rgba(16, 185, 129, 0.1);
-      color: var(--accent-green);
-      border: 1px solid rgba(16, 185, 129, 0.2);
-      padding: 6px 12px;
-      border-radius: 20px;
+      display: flex; align-items: center; gap: 6px; font-size: 12px;
+      background: rgba(16, 185, 129, 0.1); color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.2); padding: 6px 12px; border-radius: 20px;
     }
-
     .badge-status::before {
-      content: "";
-      width: 6px;
-      height: 6px;
-      background: var(--accent-green);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--accent-green);
+      content: ""; width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%;
     }
 
-    /* 搜尋控制面板 */
     .card {
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+      background: var(--card-bg); backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border); border-radius: var(--radius-lg);
+      padding: 22px; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     }
 
-    .search-box {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .input-wrapper {
-      position: relative;
-      flex: 1;
-      min-width: 260px;
-    }
-
+    /* 網址輸入與導航按鈕 */
+    .action-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .input-wrapper { position: relative; flex: 1; min-width: 280px; }
     .input-wrapper svg {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      pointer-events: none;
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); pointer-events: none;
     }
 
     input[type="text"], textarea {
-      width: 100%;
-      background: var(--input-bg);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: var(--radius-md);
-      color: var(--text-main);
-      font-size: 15px;
-      padding: 14px 16px 14px 46px;
-      outline: none;
-      transition: all 0.2s ease;
+      width: 100%; background: var(--input-bg); border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md); color: var(--text-main); font-size: 15px;
+      padding: 13px 16px 13px 44px; outline: none; transition: 0.2s;
     }
-
     input[type="text"]:focus, textarea:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px var(--primary-glow);
+      border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow);
       background: rgba(15, 23, 42, 0.85);
     }
-
-    input::placeholder, textarea::placeholder {
-      color: rgba(148, 163, 184, 0.6);
-      font-weight: 300;
-    }
+    input::placeholder, textarea::placeholder { color: rgba(148, 163, 184, 0.6); }
 
     .clear-btn {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: transparent; border: none; color: var(--text-muted); cursor: pointer;
     }
 
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 14px 24px;
-      border-radius: var(--radius-md);
-      font-size: 15px;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      white-space: nowrap;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 13px 20px; border-radius: var(--radius-md); font-size: 15px; font-weight: 700;
+      border: none; cursor: pointer; transition: 0.2s; white-space: nowrap;
     }
-
     .btn-primary {
       background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-      color: #0f172a;
-      font-weight: 700;
-      box-shadow: 0 4px 15px var(--primary-glow);
+      color: #0f172a; box-shadow: 0 4px 15px var(--primary-glow);
+    }
+    .btn-primary:hover { filter: brightness(1.08); }
+
+    .btn-portal {
+      background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f8fafc; font-weight: 600;
+    }
+    .btn-portal:hover {
+      background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.3);
     }
 
-    .btn-primary:hover {
-      filter: brightness(1.08);
-      transform: translateY(-1px);
+    .step-helper {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 10px; font-size: 13px; color: var(--text-muted); flex-wrap: wrap; gap: 8px;
+    }
+    .step-tags { display: flex; gap: 8px; align-items: center; font-size: 12px; }
+    .step-tag {
+      background: rgba(255, 255, 255, 0.06); padding: 3px 8px; border-radius: 4px;
     }
 
-    /* 歷史搜尋與提示列 */
-    .search-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 12px;
-      font-size: 13px;
-      color: var(--text-muted);
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .history-chips {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .chip {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 4px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      transition: 0.15s;
-    }
-
-    .chip:hover {
-      background: var(--primary-glow);
-      border-color: var(--primary);
-      color: #fff;
-    }
-
-    /* 雙欄主架構 */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-
-    @media (max-width: 900px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
 
     .section-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      font-size: 14px; font-weight: 600; color: var(--text-muted);
+      margin-bottom: 14px; display: flex; justify-content: space-between;
     }
 
-    /* 規格調整欄位表單 */
-    .field-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field-full { grid-column: span 2; }
+    .field-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+    .field-group input { padding: 9px 12px; font-size: 14px; }
+    textarea.feature-editor { min-height: 180px; line-height: 1.6; resize: vertical; padding: 12px 14px; font-size: 13px; }
 
-    .field-full {
-      grid-column: span 2;
-    }
-
-    .field-group label {
-      display: block;
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
-
-    .field-group input {
-      padding: 10px 14px;
-      font-size: 14px;
-    }
-
-    textarea.feature-editor {
-      min-height: 180px;
-      line-height: 1.6;
-      resize: vertical;
-      padding: 12px 14px;
-      font-size: 13px;
-    }
-
-    /* 預覽與輸出卡片 */
-    .output-container {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
+    .output-container { display: flex; flex-direction: column; gap: 12px; }
     .preview-box {
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: var(--radius-md);
-      padding: 20px;
-      font-size: 14.5px;
-      line-height: 1.75;
-      white-space: pre-wrap;
-      word-break: break-all;
-      flex: 1;
-      min-height: 480px;
-      font-family: 'Noto Sans TC', sans-serif;
-      position: relative;
+      background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md); padding: 18px; font-size: 14.5px; line-height: 1.75;
+      white-space: pre-wrap; word-break: break-all; min-height: 480px; flex: 1;
     }
 
     .empty-state {
-      height: 100%;
-      min-height: 400px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      text-align: center;
-      gap: 12px;
+      height: 100%; min-height: 400px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; color: var(--text-muted); text-align: center; gap: 12px;
     }
+    .empty-state svg { opacity: 0.3; }
 
-    .empty-state svg {
-      opacity: 0.3;
-    }
+    .btn-group { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-top: 4px; }
+    .btn-copy { background: var(--accent-green); color: #fff; }
+    .btn-copy:hover { background: var(--accent-green-hover); }
+    .btn-line { background: var(--line-color); color: #fff; }
 
-    .btn-group {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 10px;
-    }
-
-    .btn-copy {
-      background: var(--accent-green);
-      color: #fff;
-    }
-
-    .btn-copy:hover {
-      background: var(--accent-green-hover);
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-    }
-
-    .btn-line {
-      background: var(--line-color);
-      color: #fff;
-    }
-
-    .btn-line:hover {
-      filter: brightness(1.1);
-    }
-
-    /* 狀態提示浮層 */
     .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #1e293b;
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: var(--radius-md);
-      border-left: 4px solid var(--accent-green);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-      transform: translateY(100px);
-      opacity: 0;
-      transition: all 0.3s ease;
-      z-index: 999;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
+      position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff;
+      padding: 12px 20px; border-radius: var(--radius-md); border-left: 4px solid var(--accent-green);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); opacity: 0; transform: translateY(100px);
+      transition: 0.3s; z-index: 999; font-size: 14px;
     }
-
-    .toast.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
+    .toast.show { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- 頂部標頭 -->
   <header class="header">
     <div class="brand">
       <div class="brand-icon">英</div>
       <div class="brand-text">
         <h1>英泓廣告小幫手</h1>
-        <p>一鍵抓取永慶物件 ‧ 格式精準成型</p>
+        <p>貼上物件網址 ‧ 自動抓取精準排版</p>
       </div>
     </div>
-    <div class="badge-status">原生穩定解析節點已就緒</div>
+    <div class="badge-status">網址直通解析模組</div>
   </header>
 
-  <!-- 查詢卡片 -->
+  <!-- 操作卡片 -->
   <section class="card">
-    <div class="search-box">
+    <div class="action-bar">
+      <!-- 點開永慶網站按鈕 -->
+      <button class="btn btn-portal" onclick="openYungChing()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+        開啟永慶網站
+      </button>
+
+      <!-- 網址輸入框 -->
       <div class="input-wrapper">
-        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-        <input type="text" id="houseId" placeholder="請輸入網址上的數字編號（例如：7306855 或 7226921）或完整網址..." autocomplete="off">
-        <button class="clear-btn" onclick="clearSearch()">✕</button>
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+        <input type="text" id="targetUrl" placeholder="在此貼上永慶物件完整網址（例如：https://buy.yungching.com.tw/house/7306855）..." autocomplete="off">
+        <button class="clear-btn" onclick="clearInput()">✕</button>
       </div>
+
+      <!-- 解析按鈕 -->
       <button class="btn btn-primary" id="fetchBtn" onclick="fetchAndParse()">
         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-        快速抓取整理
+        抓取整理資料
       </button>
     </div>
 
-    <div class="search-meta">
-      <div class="history-chips" id="historyChips">
-        <span style="font-size: 12px; opacity: 0.6;">歷史紀錄：</span>
+    <div class="step-helper">
+      <div class="step-tags">
+        <span class="step-tag">步驟 1：點按鈕去永慶搜物件</span>
+        <span class="step-tag">步驟 2：複製物件網址並貼回</span>
+        <span class="step-tag">步驟 3：點抓取並一鍵複製</span>
       </div>
-      <div id="statusMessage">輸入物件編號後點擊「快速抓取整理」</div>
+      <div id="statusMessage">貼上網址後點擊「抓取整理資料」</div>
     </div>
   </section>
 
-  <!-- 主工作區：左側規格微調、右側即時文案預覽 -->
+  <!-- 主工作區：左側微調、右側預覽 -->
   <div class="main-grid">
-    <!-- 左側微調區 -->
     <div class="card">
       <div class="section-title">
         <span>規格細項微調</span>
-        <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">修改後預覽同步更新</span>
+        <span style="font-size: 11px; color: var(--text-muted);">修改後同步更新預覽</span>
       </div>
 
       <div class="field-grid">
-        <div class="field-group">
-          <label>開價</label>
-          <input type="text" id="f_price" placeholder="例：1,536萬" oninput="renderOutput()">
-        </div>
-        <div class="field-group">
-          <label>地址 / 社區</label>
-          <input type="text" id="f_address" placeholder="例：台南市永康區永勝街" oninput="renderOutput()">
-        </div>
-        <div class="field-group">
-          <label>總建坪數</label>
-          <input type="text" id="f_totalPing" placeholder="例：48.98坪" oninput="renderOutput()">
-        </div>
-        <div class="field-group">
-          <label>主建物</label>
-          <input type="text" id="f_mainPing" placeholder="例：22.71坪" oninput="renderOutput()">
-        </div>
-        <div class="field-group">
-          <label>附屬建物</label>
-          <input type="text" id="f_subPing" placeholder="例：2.98坪" oninput="renderOutput()">
-        </div>
-        <div class="field-group">
-          <label>共同使用</label>
-          <input type="text" id="f_sharedPing" placeholder="例：23.29坪" oninput="renderOutput()">
-        </div>
-        <div class="field-group">
-          <label>建物格局</label>
-          <input type="text" id="f_layout" placeholder="例：3房2廳2衛" oninput="renderOutput()">
-        </div>
-        <div class="field-group">
-          <label>車位形式</label>
-          <input type="text" id="f_parking" placeholder="例：坡道平面" oninput="renderOutput()">
-        </div>
-        <div class="field-group">
-          <label>樓層</label>
-          <input type="text" id="f_floor" placeholder="例：8樓／14樓" oninput="renderOutput()">
-        </div>
-        <div class="field-group">
-          <label>屋齡</label>
-          <input type="text" id="f_age" placeholder="例：約 1 年" oninput="renderOutput()">
-        </div>
+        <div class="field-group"><label>開價</label><input type="text" id="f_price" placeholder="例：1,536萬" oninput="renderOutput()"></div>
+        <div class="field-group"><label>地址 / 社區</label><input type="text" id="f_address" placeholder="例：台南市永康區永勝街" oninput="renderOutput()"></div>
+        <div class="field-group"><label>總建坪數</label><input type="text" id="f_totalPing" placeholder="例：48.98坪" oninput="renderOutput()"></div>
+        <div class="field-group"><label>主建物</label><input type="text" id="f_mainPing" placeholder="例：22.71坪" oninput="renderOutput()"></div>
+        <div class="field-group"><label>附屬建物</label><input type="text" id="f_subPing" placeholder="例：2.98坪" oninput="renderOutput()"></div>
+        <div class="field-group"><label>共同使用</label><input type="text" id="f_sharedPing" placeholder="例：23.29坪" oninput="renderOutput()"></div>
+        <div class="field-group"><label>建物格局</label><input type="text" id="f_layout" placeholder="例：3房2廳2衛" oninput="renderOutput()"></div>
+        <div class="field-group"><label>車位形式</label><input type="text" id="f_parking" placeholder="例：坡道平面" oninput="renderOutput()"></div>
+        <div class="field-group"><label>樓層</label><input type="text" id="f_floor" placeholder="例：8樓／14樓" oninput="renderOutput()"></div>
+        <div class="field-group"><label>屋齡</label><input type="text" id="f_age" placeholder="例：約 1 年" oninput="renderOutput()"></div>
         <div class="field-group field-full">
           <label>物件特色說明（每行一項，會自動補上「‧」）</label>
-          <textarea class="feature-editor" id="f_features" placeholder="抓取後將自動條列於此，亦可手動增刪..." oninput="renderOutput()"></textarea>
+          <textarea class="feature-editor" id="f_features" placeholder="抓取後將自動條列於此，亦可隨時手動編輯增刪..." oninput="renderOutput()"></textarea>
         </div>
       </div>
     </div>
 
-    <!-- 右側預覽區 -->
     <div class="card output-container">
-      <div class="section-title">
-        <span>文案預覽（標準格式）</span>
-      </div>
-
+      <div class="section-title"><span>文案預覽（標準格式）</span></div>
       <div class="preview-box" id="outputPreview">
         <div class="empty-state">
           <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          <p>尚未載入資料<br><span style="font-size: 12px;">在上方輸入編號並點擊抓取，文案將立即產生於此</span></p>
+          <p>尚未載入資料<br><span style="font-size: 12px;">貼上永慶物件網址並點擊抓取，文案將立即在此呈現</span></p>
         </div>
       </div>
-
       <div class="btn-group">
-        <button class="btn btn-copy" onclick="copyResult()">
-          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-          一鍵複製完整文案
-        </button>
-        <button class="btn btn-line" onclick="shareToLine()">
-          傳送 LINE
-        </button>
+        <button class="btn btn-copy" onclick="copyResult()">📋 一鍵複製完整文案</button>
+        <button class="btn btn-line" onclick="shareToLine()">傳送 LINE</button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast">📋 已複製到剪貼簿，可直接貼到 LINE / FB！</div>
+<div class="toast" id="toast"></div>
 
 <script>
 let currentFullText = "";
 
-// 監聽 Enter 快速鍵
-document.getElementById("houseId").addEventListener("keypress", (e) => {
+// 點開永慶網站（開新分頁導向台南市列表，方便直接在上面搜編號）
+function openYungChing() {
+  window.open("https://buy.yungching.com.tw/list/%E5%8F%B0%E5%8D%97%E5%B8%82-_c", "_blank");
+}
+
+// 支援在網址框按下 Enter 直接抓取
+document.getElementById("targetUrl").addEventListener("keypress", (e) => {
   if (e.key === "Enter") fetchAndParse();
 });
 
-// 清除輸入框
-function clearSearch() {
-  document.getElementById("houseId").value = "";
-  document.getElementById("houseId").focus();
+function clearInput() {
+  document.getElementById("targetUrl").value = "";
+  document.getElementById("targetUrl").focus();
 }
 
-// 歷史紀錄處理
-function addHistory(id) {
-  let hist = JSON.parse(localStorage.getItem("yc_hist") || "[]");
-  hist = [id, ...hist.filter(x => x !== id)].slice(0, 5);
-  localStorage.setItem("yc_hist", JSON.stringify(hist));
-  renderHistory();
-}
-
-function renderHistory() {
-  const container = document.getElementById("historyChips");
-  const hist = JSON.parse(localStorage.getItem("yc_hist") || "[]");
-  if (hist.length === 0) {
-    container.style.display = "none";
-    return;
-  }
-  container.style.display = "flex";
-  container.innerHTML = `<span style="font-size: 12px; opacity: 0.6;">歷史紀錄：</span>` + 
-    hist.map(item => `<span class="chip" onclick="quickSearch('${item}')">${item}</span>`).join("");
-}
-
-function quickSearch(id) {
-  document.getElementById("houseId").value = id;
-  fetchAndParse();
-}
-
-// 最原始穩定的抓取核心（直連 house 詳細頁）
+// 核心抓取程序：直接解析物件詳細頁
 async function fetchAndParse() {
-  const input = document.getElementById("houseId").value.trim();
+  const urlInput = document.getElementById("targetUrl").value.trim();
   const status = document.getElementById("statusMessage");
   const btn = document.getElementById("fetchBtn");
 
-  if (!input) {
-    showToast("⚠️ 請先輸入物件編號或網址");
+  if (!urlInput) {
+    showToast("⚠️ 請先貼上永慶物件網址！");
     return;
   }
 
-  // 1. 完全採用第一版最正確的直通路徑
-  let targetUrl = "";
-  if (input.startsWith("http")) {
-    targetUrl = input;
-  } else if (/^\d+$/.test(input)) {
-    targetUrl = `https://buy.yungching.com.tw/house/${input}`;
-  } else {
-    targetUrl = `https://buy.yungching.com.tw/house/search?keyword=${encodeURIComponent(input)}`;
+  // 確保是有效網址格式
+  let finalUrl = urlInput;
+  if (!finalUrl.startsWith("http")) {
+    // 若只輸入了純數字 ID（如 7306855），貼心自動拼成完整網址
+    if (/^\d+$/.test(finalUrl)) {
+      finalUrl = `https://buy.yungching.com.tw/house/${finalUrl}`;
+    } else {
+      finalUrl = "https://" + finalUrl;
+    }
   }
 
   btn.disabled = true;
   btn.style.opacity = "0.7";
-  status.innerText = "連線抓取中，請稍候...";
+  status.innerText = "連線解析物件資料中，請稍候...";
   status.style.color = "var(--primary)";
 
   try {
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(finalUrl)}`;
     const resp = await fetch(proxyUrl);
     const data = await resp.json();
 
-    if (!data.contents) throw new Error("無法取得頁面原始碼");
+    if (!data.contents) throw new Error("EMPTY_DATA");
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(data.contents, "text/html");
+    const fullHtml = doc.body.innerText;
 
-    // 2. 解析欄位數據
+    // 基本驗證：確認是否拿到物件詳細頁
+    if (!fullHtml.includes("坪") && !fullHtml.includes("房") && !fullHtml.includes("萬")) {
+      throw new Error("NOT_HOUSE_PAGE");
+    }
+
     const textOf = (selector) => {
       const el = doc.querySelector(selector);
       return el ? el.innerText.trim() : "";
     };
 
-    const price = textOf(".price") || textOf(".text-price") || "洽業務";
-    const address = textOf(".house-info-addr") || textOf("span[itemprop='address']") || "台南市永康區";
-    const community = textOf(".community-name") || "";
-    
-    // 坪數規格區解析
-    const fullHtml = doc.body.innerText;
     const findPattern = (reg, defaultVal = "--") => {
       const match = fullHtml.match(reg);
       return match ? match[1].trim() : defaultVal;
     };
 
+    // 1. 開價
+    let price = "--";
+    const pEl = doc.querySelector(".price, .text-price, .house-price");
+    if (pEl && /^[0-9,.]+\s*萬$/.test(pEl.innerText.trim())) {
+      price = pEl.innerText.trim();
+    } else {
+      const m = fullHtml.match(/([0-9,.]+)\s*萬/);
+      price = m ? `${m[1]}萬` : "--";
+    }
+
+    // 2. 地址與社區
+    let address = textOf(".house-info-addr") || textOf("span[itemprop='address']") || textOf(".address");
+    if (!address || address.includes("實價")) {
+      const addrMatch = fullHtml.match(/(台南市[^\s\n\r]+(?:路|街|巷|段|區)[^\s\n\r]*)/);
+      address = addrMatch ? addrMatch[1] : "台南市永康區";
+    }
+    const community = textOf(".community-name");
+    const fullAddress = (community && !address.includes(community)) ? `${address}（${community}）` : address;
+
+    // 3. 坪數規格
     const totalPing = findPattern(/建物坪數[\s\S]*?([\d\.]+\s*坪(\(含車位[\d\.]+坪\))?)/) || findPattern(/建物([\d\.]+坪)/);
     const mainPing = findPattern(/主建物[\s\S]*?([\d\.]+\s*坪)/) || "--";
     const subPing = findPattern(/附屬建物[\s\S]*?([\d\.]+\s*坪(\([^\)]+\))?)/) || "--";
@@ -610,7 +346,7 @@ async function fetchAndParse() {
     const floor = findPattern(/樓層[\s\S]*?([0-9]+[\s\/]+[0-9]+樓)/) || findPattern(/([0-9]+\/[0-9]+樓)/);
     const age = findPattern(/屋齡[\s\S]*?([\d\.]+\s*年)/) || findPattern(/屋齡\s*([\d\.]+\s*年)/);
 
-    // 車位形式解析
+    // 4. 車位
     let parking = "坡道平面";
     if (fullHtml.includes("平面車位") || fullHtml.includes("B1平面")) {
       const parkMatch = fullHtml.match(/([B0-9]+平面車位)/);
@@ -619,10 +355,9 @@ async function fetchAndParse() {
       parking = "機械車位";
     }
 
-    // 物件特色抓取
+    // 5. 特色條列
     let featureItems = [];
-    const descSection = doc.querySelector(".detail-intro") || doc.querySelector(".house-intro") || doc.querySelector(".text-content");
-    
+    const descSection = doc.querySelector(".detail-intro, .house-intro, .text-content");
     if (descSection) {
       featureItems = descSection.innerText.split("\n").map(s => s.trim().replace(/^[‧•\-\*]\s*/, "")).filter(s => s.length > 5);
     } else {
@@ -640,9 +375,7 @@ async function fetchAndParse() {
       ];
     }
 
-    const fullAddress = community ? `${address}（${community}）` : address;
-
-    // 回填至左側微調編輯器
+    // 回填至左側微調欄位
     document.getElementById("f_price").value = price.replace(/\s+/g, '');
     document.getElementById("f_address").value = fullAddress;
     document.getElementById("f_totalPing").value = totalPing;
@@ -655,24 +388,23 @@ async function fetchAndParse() {
     document.getElementById("f_age").value = age !== "--" ? `約 ${age}` : "--";
     document.getElementById("f_features").value = featureItems.join("\n");
 
-    addHistory(input);
     renderOutput();
 
-    status.innerText = "✅ 資料擷取成功！隨時可點擊下方複製按鈕。";
+    status.innerText = "✅ 資料擷取成功！隨時可微調或點擊複製。";
     status.style.color = "var(--accent-green)";
     showToast("⚡ 抓取成功！文案已排版完畢");
 
   } catch (err) {
-    status.innerText = "⚠️ 抓取稍遇連線阻擋，請確認輸入的是物件網址上的編號（如 7306855）。";
+    status.innerText = "❌ 抓取失敗，請確認貼上的是否為「物件詳細頁」網址。";
     status.style.color = "#ef4444";
-    showToast("⚠️ 連線超時，請檢查編號");
+    showToast("⚠️ 請確認貼上正確的物件網址");
   } finally {
     btn.disabled = false;
     btn.style.opacity = "1";
   }
 }
 
-// 根據左側欄位即時生成右側預覽
+// 即時渲染文案
 function renderOutput() {
   const price = document.getElementById("f_price").value || "--";
   const address = document.getElementById("f_address").value || "--";
@@ -742,16 +474,12 @@ function shareToLine() {
   window.open(lineUrl, '_blank');
 }
 
-// Toast 提示
 function showToast(msg) {
   const toast = document.getElementById("toast");
   toast.innerText = msg;
   toast.classList.add("show");
   setTimeout(() => toast.classList.remove("show"), 2500);
 }
-
-// 初始化
-renderHistory();
 </script>
 
 </body>
